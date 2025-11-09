@@ -4,7 +4,7 @@
 
 1. Install `Docker Desktop`, make sure to have it on.
 
-2. `git clone [repo]`
+2. `git clone https://github.com/samuski/gu-llm.git`
 
 3. Edit `.env sample`, add the personal access token in the empty fields. Rename the file to `.env`
 
