@@ -18,12 +18,12 @@
 - Multiwoz data needs to be downloaded separately. In terminal, run `git clone https://github.com/budzianowski/multiwoz.git` in root of the project.
 - `adapter` folder in root, that has LoRA parameters.
 
-5. Build the container by running `docker compose up -d --build` in terminal.
+6. Build the container by running `docker compose up -d --build` in terminal.
 
 - It's going to take a few minutes as the model gets automatically downloaded into volume.
 - Note that if the volume gets cleared, it will need to be downloaded again.
 
-6. Once built, the dashboard can be accessed on browswer via `localhost:8001`
+7. Once built, the dashboard can be accessed on browswer via `localhost:8001`
 
 ## Data Clean Up
 
