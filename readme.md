@@ -23,7 +23,7 @@
 - It's going to take a few minutes as the model gets automatically downloaded into volume.
 - Note that if the volume gets cleared, it will need to be downloaded again.
 
-7. Once built, the dashboard can be accessed on browswer via `localhost:8001`
+7. Once built, the dashboard can be accessed on browser via `localhost:8001`
 
 ## Data Clean Up
 
