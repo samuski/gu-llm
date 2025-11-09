@@ -1,0 +1,17 @@
+services:
+  web:
+    gpus: all # Remove if no GPU support
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+      - hf-cache:/root/.cache/huggingface
+      - models:/models
+
+volumes:
+  hf-cache:
+  models:

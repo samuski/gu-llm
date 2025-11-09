@@ -1,0 +1,135 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>LLM Demo</title>
+<style>
+  body { max-width:720px; margin:40px auto; font-family:system-ui }
+  #out { white-space:pre-wrap; background:#f5f5f5; padding:12px; min-height:3rem }
+  .row { margin:8px 0 }
+  .btn { padding:8px 12px; cursor:pointer }
+  .btn[disabled] { opacity:.6; cursor:not-allowed }
+  /* Spinner */
+  .spinner {
+    display:inline-block; width:18px; height:18px; border:3px solid #ddd;
+    border-top-color:#666; border-radius:50%; animation:spin 0.8s linear infinite;
+    vertical-align:-3px; margin-right:8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading { display:none; color:#444; margin:8px 0 }
+  #err { color:#b00020; margin-top:8px; display:none }
+  #out p {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+</style>
+
+<h2>LLM Chat (demo)</h2>
+
+<div class="row">
+  <label>System prompt</label><br/>
+  <textarea id="sys" rows="3" style="width:100%">You are a helpful trip planning assistant that books venues and plan transportation.</textarea>
+</div>
+
+<div class="row">
+  <label>User message</label><br/>
+  <textarea id="usr" rows="4" style="width:100%">What is your directive?</textarea>
+</div>
+
+<div class="row">
+  <label>Max new tokens</label>
+  <input id="maxnew" type="number" min="16" max="2048" value="512" style="width:7rem" />
+  <button id="go" class="btn">Send</button>
+</div>
+
+<div id="loading"><span class="spinner"></span>Generating…</div>
+<pre id="out"></pre>
+<div id="err"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+<script>
+  const go = document.getElementById('go');
+  const out = document.getElementById('out');
+  const err = document.getElementById('err');
+  const loading = document.getElementById('loading');
+
+  const sysEl = document.getElementById('sys');
+  const usrEl = document.getElementById('usr');
+  const maxNewEl = document.getElementById('maxnew');
+
+  // Global conversation history (per page load)
+  let messages = [
+    { role: "system", content: sysEl.value || "You are a helpful assistant for travel and bookings." }
+  ];
+
+  // If you change the system prompt, update the first message
+  sysEl.addEventListener('change', () => {
+    messages[0].content = sysEl.value || "You are a helpful assistant for travel and bookings.";
+  });
+
+  async function chat() {
+    err.style.display = 'none';
+    out.innerHTML = '';
+    go.disabled = true;
+    loading.style.display = 'inline-block';
+
+    const userText = usrEl.value.trim();
+    if (!userText) {
+      loading.style.display = 'none';
+      go.disabled = false;
+      return;
+    }
+
+    // Add user message to conversation history
+    messages.push({ role: 'user', content: userText });
+
+    const max_new_tokens = parseInt(maxNewEl.value || '256', 10);
+
+    // Optional: cancel if it hangs >120s
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 120000);
+
+    try {
+      const r = await fetch('/chat/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages,          // full history, not a fresh array
+          max_new_tokens,
+        }),
+        signal: ctrl.signal
+      });
+
+      if (!r.ok) {
+        throw new Error(`HTTP ${r.status}`);
+      }
+
+      const j = await r.json();
+      let reply = j.response || "(no output)";
+
+      // Collapse multiple newlines
+      reply = reply.replace(/\n{3,}/g, "\n\n");
+
+      // Add assistant reply to conversation history
+      messages.push({ role: "assistant", content: reply });
+
+      const html = DOMPurify.sanitize(marked.parse(reply));
+      out.innerHTML = html;
+
+      usrEl.value = "";
+
+    } catch (e) {
+      err.textContent = 'Request failed: ' + (e.message || e);
+      err.style.display = 'block';
+    } finally {
+      clearTimeout(t);
+      loading.style.display = 'none';
+      go.disabled = false;
+    }
+  }
+
+  go.addEventListener('click', (e) => {
+    e.preventDefault();
+    chat();
+  });
+</script>
