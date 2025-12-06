@@ -15,30 +15,20 @@
 
 5. Additional folders and projects.
 
-- Multiwoz data needs to be downloaded separately. In terminal, run `git clone https://github.com/budzianowski/multiwoz.git` in root of the project.
-- `adapter` folder in root, that has LoRA parameters.
+- msmarco data needs to be downloaded separately. In terminal, `run hf download infosense/msmarco-reduced-trecrag --repo-type dataset --local-dir ./msmarco-reduced-trecrag`. Or in Docker desktop's exec.
 
 6. Build the container by running `docker compose up -d --build` in terminal.
 
 - It's going to take a few minutes as the model gets automatically downloaded into volume.
 - Note that if the volume gets cleared, it will need to be downloaded again.
 
-7. Once built, the dashboard can be accessed on browser via `localhost:8001`
+7. Go into the container with `docker compose exec backend bash` and run `docker compose exec backend bash` to migrate the db.
 
-## Data Clean Up
+8. Import the data with `python manage.py import_segments --data-dir ./msmarco-reduced-trecrag`
 
-- In container exec, run `python core/llm/convert.py`.
-- It converts the json data files into jsonl format and puts it in `data` directory in the root.
-- The logic expects that the multiwoz project directory is in root of the project.
+9. Generate logs
 
-## Finetune
-
-- In container exec, run `python core/llm/finetune.py`.
-- It trains with given parameters in the file, default key parameters are `num_train_epochs=2`, `per_device_train_batch_size=2`, `gradient_accumulation_steps=16`, `learning_rate=1.5e-4`.
-- It's set to not save any intermediate steps. When finished all gets saved to `adapters` directory in the root.
-
-## Clean Up
-
-- In terminal, run `docker compose down -v` to turn off and remove volume.
-- To remove residual objects, run `docker system prune`.
-  - WARNING: This attempts to remove unused networks, stopped containers, dangling images, and build caches. This can remove objects from other projects!
+- `python manage.py rag_base_run`
+- `python manage.py rag_generate_retrieve`
+- `python manage.py rag_retrieve_generate`
+- `python manage.py rag_generate_retrieve_generate`
