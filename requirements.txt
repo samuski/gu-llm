@@ -14,3 +14,8 @@ torch==2.3.1+cu121
 peft>=0.11
 bitsandbytes>=0.43.1
 datasets>=2.20
+
+# RAG Stuff
+faiss-gpu-cu12>=1.11.0
+sentence-transformers>=3.0
+numpy>=1.26
